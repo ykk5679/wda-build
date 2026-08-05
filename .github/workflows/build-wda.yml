@@ -16,17 +16,9 @@ jobs:
       - name: Xcode version
         run: xcodebuild -version
 
-      - name: Clone WebDriverAgent (iOS 12 era)
+      - name: Clone WebDriverAgent v5.15.8
         run: |
-          git clone https://github.com/appium/WebDriverAgent.git wda
-          cd wda
-          git checkout a69b5419cc73c96706083d59eeb43c41e54c1e90
-
-      - name: Remove XCTAutomationSupport links
-        working-directory: wda
-        run: |
-          sed -i '' '/XCTAutomationSupport.framework/d' WebDriverAgent.xcodeproj/project.pbxproj
-          grep -c XCTAutomationSupport WebDriverAgent.xcodeproj/project.pbxproj || true
+          git clone --depth 1 --branch v5.15.8 https://github.com/appium/WebDriverAgent.git wda
 
       - name: Build Runner app (unsigned)
         working-directory: wda
@@ -39,7 +31,6 @@ jobs:
             -derivedDataPath /tmp/wda_derived \
             -destination 'generic/platform=iOS' \
             CODE_SIGNING_ALLOWED=NO \
-            OTHER_LDFLAGS='-weak_framework XCTAutomationSupport' \
             IPHONEOS_DEPLOYMENT_TARGET=12.0 \
             build
 
