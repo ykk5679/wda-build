@@ -1,0 +1,61 @@
+name: Build WDA IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-13
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone WebDriverAgent (iOS 12 era)
+        run: |
+          git clone https://github.com/appium/WebDriverAgent.git wda
+          cd wda
+          COMMIT=$(git rev-list -1 --before="2021-04-01" HEAD)
+          echo "WDA_COMMIT=$COMMIT"
+          git checkout $COMMIT
+
+      - name: Bootstrap dependencies
+        working-directory: wda
+        run: |
+          ./Scripts/bootstrap.sh
+        env:
+          CARTHAGE_NO_USE_BINARIES: '1'
+
+      - name: Build Runner app (unsigned)
+        working-directory: wda
+        run: |
+          xcodebuild \
+            -project WebDriverAgent.xcodeproj \
+            -scheme WebDriverAgentRunner \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath /tmp/wda_derived \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            IPHONEOS_DEPLOYMENT_TARGET=12.0 \
+            build-for-testing
+
+      - name: Package WDA.ipa
+        run: |
+          APP=$(find /tmp/wda_derived/Build/Products -maxdepth 1 -type d -name 'WebDriverAgentRunner-Runner.app' | head -1)
+          echo "APP=$APP"
+          test -n "$APP"
+          mkdir -p /tmp/wda_out/Payload
+          cp -R "$APP" /tmp/wda_out/Payload/
+          rm -rf /tmp/wda_out/Payload/WebDriverAgentRunner-Runner.app/Frameworks/XC*
+          cd /tmp/wda_out
+          zip -qr /tmp/WDA.ipa Payload
+          ls -lh /tmp/WDA.ipa
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WDA.ipa
+          path: /tmp/WDA.ipa
