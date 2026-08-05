@@ -7,11 +7,17 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-12
     timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Select Xcode 13
+        run: |
+          ls /Applications | grep -i xcode || true
+          sudo xcode-select -s /Applications/Xcode_13.4.1.app 2>/dev/null || sudo xcode-select -s /Applications/Xcode_13.2.1.app 2>/dev/null || true
+          xcodebuild -version
 
       - name: Clone WebDriverAgent (iOS 12 era)
         run: |
