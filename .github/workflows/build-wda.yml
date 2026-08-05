@@ -20,17 +20,18 @@ jobs:
           COMMIT=$(git rev-list -1 --before="2021-04-01" HEAD)
           echo "WDA_COMMIT=$COMMIT"
           git checkout $COMMIT
+          ls -la Scripts | head -20
 
       - name: Bootstrap dependencies
-        working-directory: wda
         run: |
-          ./Scripts/bootstrap.sh
-        env:
-          CARTHAGE_NO_USE_BINARIES: '1'
+          cd wda
+          pwd
+          ls -la Scripts
+          bash Scripts/bootstrap.sh
 
       - name: Build Runner app (unsigned)
-        working-directory: wda
         run: |
+          cd wda
           xcodebuild \
             -project WebDriverAgent.xcodeproj \
             -scheme WebDriverAgentRunner \
