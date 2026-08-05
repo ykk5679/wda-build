@@ -39,6 +39,7 @@ jobs:
             -derivedDataPath /tmp/wda_derived \
             -destination 'generic/platform=iOS' \
             CODE_SIGNING_ALLOWED=NO \
+            OTHER_LDFLAGS='-weak_framework XCTAutomationSupport' \
             IPHONEOS_DEPLOYMENT_TARGET=12.0 \
             build
 
