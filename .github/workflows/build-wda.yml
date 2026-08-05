@@ -7,25 +7,26 @@ on:
 
 jobs:
   build:
-    runs-on: macos-12
+    runs-on: macos-14
     timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 13
-        run: |
-          ls /Applications | grep -i xcode || true
-          sudo xcode-select -s /Applications/Xcode_13.4.1.app 2>/dev/null || sudo xcode-select -s /Applications/Xcode_13.2.1.app 2>/dev/null || true
-          xcodebuild -version
+      - name: Xcode version
+        run: xcodebuild -version
 
       - name: Clone WebDriverAgent (iOS 12 era)
         run: |
           git clone https://github.com/appium/WebDriverAgent.git wda
           cd wda
-          COMMIT=$(git rev-list -1 --before="2021-04-01" HEAD)
-          echo "WDA_COMMIT=$COMMIT"
-          git checkout $COMMIT
+          git checkout a69b5419cc73c96706083d59eeb43c41e54c1e90
+
+      - name: Remove XCTAutomationSupport links
+        working-directory: wda
+        run: |
+          sed -i '' '/XCTAutomationSupport.framework/d' WebDriverAgent.xcodeproj/project.pbxproj
+          grep -c XCTAutomationSupport WebDriverAgent.xcodeproj/project.pbxproj || true
 
       - name: Build Runner app (unsigned)
         working-directory: wda
